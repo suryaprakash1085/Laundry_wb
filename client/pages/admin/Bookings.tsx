@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Edit2, Trash2, Plus, Eye } from "lucide-react";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
@@ -15,15 +15,19 @@ interface Booking {
 }
 
 export default function AdminBookings() {
+
   const [bookings, setBookings] = useState<Booking[]>([
     { id: 1, customer: "John Doe", phone: "+1 555-0101", service: "Regular Wash", date: "2024-03-15", status: "Completed" },
     { id: 2, customer: "Jane Smith", phone: "+1 555-0102", service: "Dry Cleaning", date: "2024-03-16", status: "In Progress" },
     { id: 3, customer: "Mike Johnson", phone: "+1 555-0103", service: "Premium Ironing", date: "2024-03-17", status: "Pending" }
   ]);
 
+  const cardsRef = useRef<HTMLDivElement>(null);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit" | "view">("add");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+
   const [formData, setFormData] = useState({
     customer: "",
     phone: "",
@@ -32,10 +36,32 @@ export default function AdminBookings() {
     status: "Pending"
   });
 
+  /* Booking Stats */
+
+  const totalBookings = bookings.length;
+
+  const pendingBookings = bookings.filter(
+    (b) => b.status === "Pending"
+  ).length;
+
+  const inProgressBookings = bookings.filter(
+    (b) => b.status === "In Progress"
+  ).length;
+
+  const completedBookings = bookings.filter(
+    (b) => b.status === "Completed"
+  ).length;
+
+  /* Modal Functions */
+
   const openModal = (mode: "add" | "edit" | "view", booking?: Booking) => {
+
     setModalMode(mode);
+
     if (booking) {
+
       setSelectedBooking(booking);
+
       setFormData({
         customer: booking.customer,
         phone: booking.phone,
@@ -43,7 +69,9 @@ export default function AdminBookings() {
         date: booking.date,
         status: booking.status
       });
+
     } else {
+
       setFormData({
         customer: "",
         phone: "",
@@ -51,7 +79,9 @@ export default function AdminBookings() {
         date: "",
         status: "Pending"
       });
+
     }
+
     setModalOpen(true);
   };
 
@@ -60,8 +90,12 @@ export default function AdminBookings() {
     setSelectedBooking(null);
   };
 
-  const handleSave = async () => {
+  /* Save Booking */
+
+  const handleSave = () => {
+
     if (modalMode === "add") {
+
       const newBooking: Booking = {
         id: Math.max(...bookings.map(b => b.id), 0) + 1,
         customer: formData.customer,
@@ -70,8 +104,13 @@ export default function AdminBookings() {
         date: formData.date,
         status: formData.status
       };
+
       setBookings([...bookings, newBooking]);
-    } else if (modalMode === "edit" && selectedBooking) {
+
+    }
+
+    else if (modalMode === "edit" && selectedBooking) {
+
       setBookings(
         bookings.map(b =>
           b.id === selectedBooking.id
@@ -86,14 +125,20 @@ export default function AdminBookings() {
             : b
         )
       );
+
     }
+
     closeModal();
   };
 
+  /* Delete Booking */
+
   const handleDelete = (id: number) => {
+
     if (window.confirm("Are you sure you want to delete this booking?")) {
       setBookings(bookings.filter(b => b.id !== id));
     }
+
   };
 
   const modalTitle = {
@@ -103,22 +148,69 @@ export default function AdminBookings() {
   }[modalMode];
 
   return (
+
     <div className="space-y-6">
+
+      {/* Header */}
+
       <div className="flex items-center justify-between">
+
         <div>
           <h1 className="text-3xl font-bold">Bookings Management</h1>
-          <p className="text-muted-foreground">Manage all customer bookings</p>
+          <p className="text-muted-foreground">
+            Manage all customer bookings
+          </p>
         </div>
+
         <Button size="lg" onClick={() => openModal("add")}>
           <Plus size={20} />
           New Booking
         </Button>
+
       </div>
 
+      {/* Dashboard Cards */}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+        <div className="bg-white p-5 rounded-xl border shadow-sm">
+          <p className="text-sm text-gray-500">Total Bookings</p>
+          <h2 className="text-2xl font-bold">{totalBookings}</h2>
+        </div>
+
+        <div className="bg-yellow-50 p-5 rounded-xl border border-yellow-200">
+          <p className="text-sm text-yellow-600">Pending</p>
+          <h2 className="text-2xl font-bold text-yellow-700">
+            {pendingBookings}
+          </h2>
+        </div>
+
+        <div className="bg-blue-50 p-5 rounded-xl border border-blue-200">
+          <p className="text-sm text-blue-600">In Progress</p>
+          <h2 className="text-2xl font-bold text-blue-700">
+            {inProgressBookings}
+          </h2>
+        </div>
+
+        <div className="bg-green-50 p-5 rounded-xl border border-green-200">
+          <p className="text-sm text-green-600">Completed</p>
+          <h2 className="text-2xl font-bold text-green-700">
+            {completedBookings}
+          </h2>
+        </div>
+
+      </div>
+
+      {/* Table */}
+
       <div className="bg-white rounded-xl border border-border p-6 overflow-x-auto">
+
         <table className="w-full text-sm">
+
           <thead>
+
             <tr className="border-b border-border">
+
               <th className="text-left py-3 px-4">ID</th>
               <th className="text-left py-3 px-4">Customer</th>
               <th className="text-left py-3 px-4">Phone</th>
@@ -126,56 +218,89 @@ export default function AdminBookings() {
               <th className="text-left py-3 px-4">Date</th>
               <th className="text-left py-3 px-4">Status</th>
               <th className="text-left py-3 px-4">Actions</th>
+
             </tr>
+
           </thead>
+
           <tbody>
+
             {bookings.map((booking) => (
-              <tr key={booking.id} className="border-b border-border hover:bg-gray-50">
-                <td className="py-3 px-4 font-semibold">BK{booking.id.toString().padStart(3, "0")}</td>
+
+              <tr
+                key={booking.id}
+                className="border-b border-border hover:bg-gray-50"
+              >
+
+                <td className="py-3 px-4 font-semibold">
+                  BK{booking.id.toString().padStart(3, "0")}
+                </td>
+
                 <td className="py-3 px-4">{booking.customer}</td>
+
                 <td className="py-3 px-4">{booking.phone}</td>
+
                 <td className="py-3 px-4">{booking.service}</td>
+
                 <td className="py-3 px-4">{booking.date}</td>
+
                 <td className="py-3 px-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    booking.status === "Completed"
-                      ? "bg-green-100 text-green-800"
-                      : booking.status === "In Progress"
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}>
+
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      booking.status === "Completed"
+                        ? "bg-green-100 text-green-800"
+                        : booking.status === "In Progress"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
                     {booking.status}
                   </span>
+
                 </td>
+
                 <td className="py-3 px-4">
+
                   <div className="flex items-center gap-2">
+
                     <button
                       onClick={() => openModal("view", booking)}
-                      className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                      className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg"
                     >
                       <Eye size={16} />
                     </button>
+
                     <button
                       onClick={() => openModal("edit", booking)}
-                      className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                      className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg"
                     >
                       <Edit2 size={16} />
                     </button>
+
                     <button
                       onClick={() => handleDelete(booking.id)}
-                      className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
+                      className="p-2 hover:bg-red-100 text-red-600 rounded-lg"
                     >
                       <Trash2 size={16} />
                     </button>
+
                   </div>
+
                 </td>
+
               </tr>
+
             ))}
+
           </tbody>
+
         </table>
+
       </div>
 
       {/* Modal */}
+
       <Modal
         isOpen={modalOpen}
         title={modalTitle}
@@ -194,11 +319,15 @@ export default function AdminBookings() {
           )
         }
       >
+
         <div className="space-y-4">
+
           <FormInput
             label="Customer Name"
             value={formData.customer}
-            onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, customer: e.target.value })
+            }
             disabled={modalMode === "view"}
             required
           />
@@ -207,7 +336,9 @@ export default function AdminBookings() {
             label="Phone Number"
             type="tel"
             value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, phone: e.target.value })
+            }
             disabled={modalMode === "view"}
             required
           />
@@ -215,7 +346,9 @@ export default function AdminBookings() {
           <FormSelect
             label="Service"
             value={formData.service}
-            onChange={(e) => setFormData({ ...formData, service: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, service: e.target.value })
+            }
             disabled={modalMode === "view"}
             options={[
               { value: "regular-wash", label: "Regular Wash" },
@@ -229,7 +362,9 @@ export default function AdminBookings() {
             label="Pickup Date"
             type="date"
             value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, date: e.target.value })
+            }
             disabled={modalMode === "view"}
             required
           />
@@ -237,7 +372,9 @@ export default function AdminBookings() {
           <FormSelect
             label="Status"
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, status: e.target.value })
+            }
             disabled={modalMode === "view"}
             options={[
               { value: "Pending", label: "Pending" },
@@ -246,8 +383,11 @@ export default function AdminBookings() {
               { value: "Cancelled", label: "Cancelled" }
             ]}
           />
+
         </div>
+
       </Modal>
+
     </div>
   );
 }

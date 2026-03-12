@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Edit2, Trash2, Plus, Eye } from "lucide-react";
+import { Edit2, Trash2, Plus, Eye, Shirt } from "lucide-react";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import FormInput from "@/components/FormInput";
@@ -13,6 +13,7 @@ interface Service {
 }
 
 export default function AdminServices() {
+
   const [services, setServices] = useState<Service[]>([
     { id: 1, name: "Regular Wash", price: "$15/kg", description: "Standard washing and drying" },
     { id: 2, name: "Dry Cleaning", price: "$25/item", description: "Professional dry cleaning" },
@@ -22,14 +23,37 @@ export default function AdminServices() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit" | "view">("add");
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     description: ""
   });
 
+  /* Service Stats */
+
+  const totalServices = services.length;
+
+  const premiumServices = services.filter(
+    s => s.name.toLowerCase().includes("premium")
+  ).length;
+
+  const mostExpensive =
+    services.length > 0
+      ? services.reduce((prev, current) =>
+          parseInt(prev.price.replace(/\D/g, "")) >
+          parseInt(current.price.replace(/\D/g, ""))
+            ? prev
+            : current
+        )
+      : null;
+
+  /* Modal Functions */
+
   const openModal = (mode: "add" | "edit" | "view", service?: Service) => {
+
     setModalMode(mode);
+
     if (service) {
       setSelectedService(service);
       setFormData({
@@ -44,6 +68,7 @@ export default function AdminServices() {
         description: ""
       });
     }
+
     setModalOpen(true);
   };
 
@@ -52,16 +77,23 @@ export default function AdminServices() {
     setSelectedService(null);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
+
     if (modalMode === "add") {
+
       const newService: Service = {
         id: Math.max(...services.map(s => s.id), 0) + 1,
         name: formData.name,
         price: formData.price,
         description: formData.description
       };
+
       setServices([...services, newService]);
-    } else if (modalMode === "edit" && selectedService) {
+
+    }
+
+    else if (modalMode === "edit" && selectedService) {
+
       setServices(
         services.map(s =>
           s.id === selectedService.id
@@ -74,14 +106,18 @@ export default function AdminServices() {
             : s
         )
       );
+
     }
+
     closeModal();
   };
 
   const handleDelete = (id: number) => {
+
     if (window.confirm("Are you sure you want to delete this service?")) {
       setServices(services.filter(s => s.id !== id));
     }
+
   };
 
   const modalTitle = {
@@ -91,52 +127,154 @@ export default function AdminServices() {
   }[modalMode];
 
   return (
+
     <div className="space-y-6">
+
+      {/* Header */}
+
       <div className="flex items-center justify-between">
+
         <div>
           <h1 className="text-3xl font-bold">Services Management</h1>
-          <p className="text-muted-foreground">Edit, add, or delete laundry services</p>
+          <p className="text-muted-foreground">
+            Edit, add, or delete laundry services
+          </p>
         </div>
+
         <Button size="lg" onClick={() => openModal("add")}>
           <Plus size={20} />
           New Service
         </Button>
+
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services.map((service) => (
-          <div key={service.id} className="bg-white rounded-xl border border-border p-6 hover:shadow-lg transition-shadow">
-            <h3 className="text-xl font-bold mb-2">{service.name}</h3>
-            <p className="text-primary font-semibold text-2xl mb-2">{service.price}</p>
-            <p className="text-muted-foreground text-sm mb-4">{service.description}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => openModal("view", service)}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-100 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold"
-              >
-                <Eye size={16} />
-                View
-              </button>
-              <button
-                onClick={() => openModal("edit", service)}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-100 text-blue-600 px-3 py-2 rounded-lg hover:bg-blue-200 transition-colors text-sm font-semibold"
-              >
-                <Edit2 size={16} />
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(service.id)}
-                className="flex-1 flex items-center justify-center gap-2 bg-red-100 text-red-600 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors text-sm font-semibold"
-              >
-                <Trash2 size={16} />
-                Delete
-              </button>
-            </div>
+      {/* Dashboard Cards */}
+
+      <div className="grid md:grid-cols-3 gap-6">
+
+        {/* Total */}
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm flex items-center gap-4">
+
+          <div className="bg-blue-100 p-3 rounded-lg">
+            <Shirt className="text-blue-600" />
           </div>
-        ))}
+
+          <div>
+            <p className="text-sm text-gray-500">Total Services</p>
+            <h2 className="text-2xl font-bold">{totalServices}</h2>
+          </div>
+
+        </div>
+
+        {/* Premium */}
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+
+          <p className="text-sm text-gray-500">Premium Services</p>
+          <h2 className="text-2xl font-bold">{premiumServices}</h2>
+
+        </div>
+
+        {/* Expensive */}
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm">
+
+          <p className="text-sm text-gray-500">Highest Price</p>
+
+          <h2 className="text-lg font-semibold">
+            {mostExpensive?.name || "N/A"}
+          </h2>
+
+          <p className="text-primary font-bold">
+            {mostExpensive?.price}
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* Services Table */}
+
+      <div className="bg-white rounded-xl border border-border p-6 overflow-x-auto">
+
+        <table className="w-full text-sm">
+
+          <thead>
+
+            <tr className="border-b border-border">
+
+              <th className="text-left py-3 px-4">Service</th>
+              <th className="text-left py-3 px-4">Price</th>
+              <th className="text-left py-3 px-4">Description</th>
+              <th className="text-left py-3 px-4">Actions</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {services.map((service) => (
+
+              <tr
+                key={service.id}
+                className="border-b border-border hover:bg-gray-50"
+              >
+
+                <td className="py-3 px-4 font-semibold">
+                  {service.name}
+                </td>
+
+                <td className="py-3 px-4 text-primary font-semibold">
+                  {service.price}
+                </td>
+
+                <td className="py-3 px-4">
+                  {service.description}
+                </td>
+
+                <td className="py-3 px-4">
+
+                  <div className="flex gap-2">
+
+                    <button
+                      onClick={() => openModal("view", service)}
+                      className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg"
+                    >
+                      <Eye size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => openModal("edit", service)}
+                      className="p-2 hover:bg-green-100 text-green-600 rounded-lg"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(service.id)}
+                      className="p-2 hover:bg-red-100 text-red-600 rounded-lg"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+
+                  </div>
+
+                </td>
+
+              </tr>
+
+            ))}
+
+          </tbody>
+
+        </table>
+
       </div>
 
       {/* Modal */}
+
       <Modal
         isOpen={modalOpen}
         title={modalTitle}
@@ -155,34 +293,42 @@ export default function AdminServices() {
           )
         }
       >
+
         <div className="space-y-4">
+
           <FormInput
             label="Service Name"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, name: e.target.value })
+            }
             disabled={modalMode === "view"}
-            required
           />
 
           <FormInput
             label="Price"
             value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, price: e.target.value })
+            }
             placeholder="$15/kg"
             disabled={modalMode === "view"}
-            required
           />
 
           <FormTextarea
             label="Description"
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            disabled={modalMode === "view"}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             rows={3}
-            required
+            disabled={modalMode === "view"}
           />
+
         </div>
+
       </Modal>
+
     </div>
   );
 }

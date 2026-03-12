@@ -1,91 +1,110 @@
-import { useState } from "react";
-import { Outlet, Link, useLocation } from "react-router-dom";
-import { Menu, X, LogOut } from "lucide-react";
+import { NavLink, Outlet } from "react-router-dom";
+import {
+  LayoutDashboard,
+  CalendarCheck,
+  Users,
+  UserCog,
+  Shirt,
+  Home,
+  Info,
+  Palette,
+  MessageSquare,
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import gsap from "gsap";
 
-const ADMIN_MENU = [
-  { name: "Dashboard", path: "/admin", icon: "📊" },
-  { name: "Bookings", path: "/admin/bookings", icon: "📦" },
-  { name: "Customers", path: "/admin/customers", icon: "👥" },
-  { name: "Users", path: "/admin/users", icon: "👤" },
-  { name: "Services", path: "/admin/services", icon: "🧺" },
-  { name: "Home CMS", path: "/admin/home", icon: "🏠" },
-  { name: "About CMS", path: "/admin/about", icon: "ℹ️" },
-  { name: "Customization", path: "/admin/customization", icon: "🎨" },
-  { name: "Messages", path: "/admin/messages", icon: "💬" },
-  { name: "Reports", path: "/admin/reports", icon: "📈" }
+const links = [
+  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
+  { to: "/admin/customers", label: "Customers", icon: Users },
+  { to: "/admin/users", label: "Users", icon: UserCog },
+  { to: "/admin/services", label: "Services", icon: Shirt },
+  { to: "/admin/home", label: "Home CMS", icon: Home },
+  { to: "/admin/about", label: "About CMS", icon: Info },
+  { to: "/admin/customization", label: "Customization", icon: Palette },
+  { to: "/admin/messages", label: "Messages", icon: MessageSquare },
+  { to: "/admin/reports", label: "Reports", icon: BarChart3 },
 ];
 
 export default function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+  const sidebarRef = useRef(null);
+
+  useEffect(() => {
+    gsap.from(sidebarRef.current, {
+      x: -80,
+      opacity: 0,
+      duration: 0.6,
+      ease: "power3.out",
+    });
+  }, []);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-gray-100">
+      
       {/* Sidebar */}
       <aside
+        ref={sidebarRef}
         className={`${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-foreground text-white transition-all duration-300 overflow-y-auto`}
+          collapsed ? "w-20" : "w-64"
+        } bg-white border-r shadow-sm flex flex-col transition-all duration-300`}
       >
-        <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
-          {sidebarOpen && <h1 className="font-display text-xl font-bold">✨ Admin</h1>}
+        {/* Logo */}
+        <div className="flex items-center justify-between h-16 px-4 border-b">
+          {!collapsed && (
+            <h1 className="text-xl font-bold text-indigo-600">Admin Panel</h1>
+          )}
+
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="hover:bg-sidebar-accent rounded-lg p-2"
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-2 rounded-md hover:bg-gray-100"
           >
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
-          {ADMIN_MENU.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
-                location.pathname === item.path || location.pathname.startsWith(item.path + "/")
-                  ? "bg-primary text-white"
-                  : "hover:bg-sidebar-accent"
-              }`}
+        {/* Navigation */}
+        <nav className="flex-1 p-3 space-y-1">
+          {links.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              end={link.end}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`
+              }
             >
-              <span className="text-xl flex-shrink-0">{item.icon}</span>
-              {sidebarOpen && <span className="text-sm">{item.name}</span>}
-            </Link>
+              <link.icon size={20} />
+              {!collapsed && <span>{link.label}</span>}
+            </NavLink>
           ))}
         </nav>
 
-        <div className="absolute bottom-4 left-4 right-4 border-t border-sidebar-border pt-4">
-          <button className="flex items-center gap-4 w-full px-4 py-3 hover:bg-sidebar-accent rounded-lg transition-colors">
-            <LogOut size={20} />
-            {sidebarOpen && <span className="text-sm">Logout</span>}
-          </button>
+        {/* Footer */}
+        <div className="p-3 border-t">
+          <NavLink
+            to="/"
+            className="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-100"
+          >
+            <Home size={20} />
+            {!collapsed && <span>Back to Site</span>}
+          </NavLink>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <header className="bg-white border-b border-border p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-foreground">Admin Dashboard</h2>
-            <div className="flex items-center gap-4">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold">
-                A
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto p-6">
+      {/* Content */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-8">
           <Outlet />
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

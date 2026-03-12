@@ -1,8 +1,16 @@
 import { useState } from "react";
-import { Eye, Trash2, Mail } from "lucide-react";
+import { Eye, Trash2, Mail, MessageSquare } from "lucide-react";
+
+interface Message {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  date: string;
+}
 
 export default function AdminMessages() {
-  const [messages] = useState([
+  const [messages] = useState<Message[]>([
     {
       id: 1,
       name: "John Doe",
@@ -26,13 +34,54 @@ export default function AdminMessages() {
     }
   ]);
 
+  // Stats for cards
+  const totalMessages = messages.length;
+  const recentMessage = messages[0]; // assuming first is most recent
+  const emailsCount = messages.map(m => m.email).filter((v,i,a)=>a.indexOf(v)===i).length;
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Messages</h1>
         <p className="text-muted-foreground">View and manage contact form submissions</p>
       </div>
 
+      {/* Cards */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="bg-white border rounded-xl p-5 shadow-sm flex items-center gap-4">
+          <div className="bg-blue-100 p-3 rounded-lg">
+            <MessageSquare className="text-blue-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Total Messages</p>
+            <h2 className="text-2xl font-bold">{totalMessages}</h2>
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm flex items-center gap-4">
+          <div className="bg-green-100 p-3 rounded-lg">
+            <Mail className="text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Unique Emails</p>
+            <h2 className="text-2xl font-bold">{emailsCount}</h2>
+          </div>
+        </div>
+
+        <div className="bg-white border rounded-xl p-5 shadow-sm flex items-center gap-4">
+          <div className="bg-yellow-100 p-3 rounded-lg">
+            <Eye className="text-yellow-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Most Recent</p>
+            <h2 className="text-lg font-semibold">{recentMessage?.name || "N/A"}</h2>
+            <p className="text-sm text-gray-400 truncate">{recentMessage?.message || ""}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages Table */}
       <div className="bg-white rounded-xl border border-border p-6 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -69,6 +118,7 @@ export default function AdminMessages() {
           </tbody>
         </table>
       </div>
+
     </div>
   );
 }
